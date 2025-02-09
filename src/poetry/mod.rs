@@ -1,0 +1,1 @@
+pub mod commands;  // Declara o submódulo commands

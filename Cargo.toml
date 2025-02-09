@@ -1,0 +1,10 @@
+[package]
+name = "automation"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "automation"
+path = "src/lib.rs"
+
+[dependencies]
