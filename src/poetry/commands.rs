@@ -32,9 +32,7 @@ pub fn is_valid_python_version(requirement: &str, version: &str) -> bool {
         }
     }
 
-   
-
-    false
+    true
 }
 
 pub fn get_python_version(contents: &str) -> String {
