@@ -2,26 +2,45 @@ use std::path::PathBuf;
 use std::fs;
 use std::env;
 
+pub enum Package {
+    UV,
+    POETRY,
+}
+
 pub struct Config {
     pub dir_path: PathBuf,
-    pub is_uv: bool,
-    pub is_poetry: bool,
+    pub package: Package,
     pub python_version: String,
 }
 
 pub fn parse_args() -> Option<Config> {
     let args: Vec<String> = env::args().collect();
-    let dir_path: PathBuf = if args.len() > 1 {
-        match fs::canonicalize(&args[1]) {
-            Ok(path) => path,
-            Err(e) => {
-                println!("Error processing path: {}", e);
-                return None;
-            }
+    if args.len() < 3 {
+        if args.len() == 2 && (args[1] == "-h" || args[1] == "--help") {
+            print_help();
+            return None;
         }
-    } else {
-        println!("Usage: cargo run <directory_path>");
+        println!("Usage: automation <package> <directory_path>");
+        println!("or");
+        println!("Usage: automation --help");
         return None;
+    }
+
+    let package = match args[1].as_str() {
+        "uv" => Package::UV,
+        "poetry" => Package::POETRY,
+        _ => {
+            println!("Invalid package type. Use 'uv' or 'poetry'.");
+            return None;
+        }
+    };
+
+    let dir_path: PathBuf = match fs::canonicalize(&args[2]) {
+        Ok(path) => path,
+        Err(e) => {
+            println!("Error processing path: {}", e);
+            return None;
+        }
     };
 
     // Verificações básicas
@@ -30,18 +49,24 @@ pub fn parse_args() -> Option<Config> {
         return None;
     }
 
-    let is_uv = dir_path.join("uv.lock").exists();
-    let is_poetry = dir_path.join("poetry.lock").exists();
-
-    if !is_uv && !is_poetry {
-        println!("No uv.lock or poetry.lock found in {}", dir_path.display());
-        return None;
-    }
 
     Some(Config {
         dir_path,
-        is_uv,
-        is_poetry,
+        package,
         python_version: String::from("3.x"), // valor padrão
     })
 }
+
+
+
+pub fn print_help() {
+    println!("Usage: automation <package> <directory_path>");
+    println!();
+    println!("Commands:");
+    println!("  uv <directory_path>       Set up the UV package in the specified directory");
+    println!("  poetry <directory_path>   Set up the Poetry package in the specified directory");
+    println!();
+    println!("Options:");
+    println!("  -h, --help                Print this help message and exit");
+}
+

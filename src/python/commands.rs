@@ -3,7 +3,7 @@ use std::process::Command;
 use std::str;
 use crate::uv::commands as uv;
 use crate::poetry::commands as poetry;
-
+use crate::cli as cli;
 
 pub fn list_pyenv_versions() -> Vec<String> {
     let output = Command::new("pyenv")
@@ -19,19 +19,17 @@ pub fn list_pyenv_versions() -> Vec<String> {
         .collect()
 }
 
-pub fn find_compatible_version(is_uv:bool,is_poetry:bool, requirement: &str) -> Option<String> {
+pub fn find_compatible_version(package: &cli::Package, requirement: &str) -> Option<String> {
     let versions = list_pyenv_versions();
-    let mut compatible_versions: Vec<String> = Vec::new();
-    if is_uv{
-        compatible_versions = versions.into_iter()
-        .filter(|version| uv::is_valid_python_version(requirement, version))
-        .collect();
-    }
-    else if is_poetry{
-        compatible_versions = versions.into_iter()
-        .filter(|version| poetry::is_valid_python_version(requirement, version))
-        .collect();
-    }
+    let mut compatible_versions: Vec<String> = match package {
+        cli::Package::UV => versions.into_iter()
+            .filter(|version| uv::is_valid_python_version(requirement, version))
+            .collect(),
+        cli::Package::POETRY => versions.into_iter()
+            .filter(|version| poetry::is_valid_python_version(requirement, version))
+            .collect(),
+    };
+
     compatible_versions.sort_by(|a, b| {
         let a_parts: Vec<u32> = a.split('.').filter_map(|s| s.parse().ok()).collect();
         let b_parts: Vec<u32> = b.split('.').filter_map(|s| s.parse().ok()).collect();
@@ -65,8 +63,8 @@ pub fn set_local_python_version(version: &str, path: &PathBuf) {
     }
 }
 
-pub fn install_or_set_python_version(is_uv: bool,is_poetry:bool, requirement: &str, path: &PathBuf) {
-    if let Some(version) = find_compatible_version(is_uv,is_poetry, requirement) {
+pub fn install_or_set_python_version(package: &cli::Package, requirement: &str, path: &PathBuf) {
+    if let Some(version) = find_compatible_version(&package, requirement) {
         if is_python_version_installed(&version) {
             set_local_python_version(&version, path);
         } else {
