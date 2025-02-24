@@ -3,3 +3,4 @@ pub mod python;
 pub mod uv;
 pub mod poetry;
 pub mod cli;
+pub mod safari;
