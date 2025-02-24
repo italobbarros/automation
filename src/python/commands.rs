@@ -19,13 +19,13 @@ pub fn list_pyenv_versions() -> Vec<String> {
         .collect()
 }
 
-pub fn find_compatible_version(package: &cli::Package, requirement: &str) -> Option<String> {
+pub fn find_compatible_version(package: &cli::PackageMode, requirement: &str) -> Option<String> {
     let versions = list_pyenv_versions();
     let mut compatible_versions: Vec<String> = match package {
-        cli::Package::UV => versions.into_iter()
+        cli::PackageMode::UV => versions.into_iter()
             .filter(|version| uv::is_valid_python_version(requirement, version))
             .collect(),
-        cli::Package::POETRY => versions.into_iter()
+        cli::PackageMode::POETRY => versions.into_iter()
             .filter(|version| poetry::is_valid_python_version(requirement, version))
             .collect(),
     };
@@ -63,7 +63,7 @@ pub fn set_local_python_version(version: &str, path: &PathBuf) {
     }
 }
 
-pub fn install_or_set_python_version(package: &cli::Package, requirement: &str, path: &PathBuf) {
+pub fn install_or_set_python_version(package: &cli::PackageMode, requirement: &str, path: &PathBuf) {
     if let Some(version) = find_compatible_version(&package, requirement) {
         if is_python_version_installed(&version) {
             set_local_python_version(&version, path);
